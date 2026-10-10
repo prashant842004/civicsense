@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block content %}
+<h3 class="mb-3">Leaderboard</h3>
+<table class="table align-middle"><thead><tr><th>Rank</th><th>Name</th><th>Role</th><th>Badge</th><th class="text-end">Points</th></tr></thead><tbody>
+{% for u in top %}<tr {% if current_user.is_authenticated and u.id==current_user.id %}class="table-success"{% endif %}><td>{{ loop.index }}</td><td>{{ u.name }}</td><td>{{ u.role|capitalize }}</td><td>{{ u.top_badge or '-' }}</td><td class="text-end"><b>{{ u.points }}</b></td></tr>
+{% else %}<tr><td colspan="5" class="text-muted">No points earned yet - be the first!</td></tr>{% endfor %}</tbody></table>{% endblock %}

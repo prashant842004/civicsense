@@ -1,0 +1,21 @@
+{% macro prio(p) %}<span class="pill p-{{ p }}">{{ p }}</span>{% endmacro %}
+{% macro status(s) %}<span class="pill s-{{ s }}">{{ s }}</span>{% endmacro %}
+{% macro route(r) %}<span class="pill" style="background:#e6edf4;color:#35506b">{{ 'Volunteers' if r=='volunteer' else 'Municipal' }}</span>{% endmacro %}
+{% macro media(c) %}
+{% if c.media_path %}{% if c.media_type=='video' %}<video class="thumb" controls src="{{ url_for('static', filename='uploads/'+c.media_path) }}"></video>
+{% else %}<img class="thumb" alt="Reported issue" src="{{ url_for('static', filename='uploads/'+c.media_path) }}">{% endif %}{% endif %}
+{% endmacro %}
+{% macro map_script(id, url, lat=21.1458, lng=79.0882, zoom=12) %}
+<script>
+(function(){
+  const m=L.map('{{ id }}').setView([{{ lat }},{{ lng }}],{{ zoom }});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+  const col={High:'#c62828',Medium:'#ef9a00',Low:'#148A47'};
+  fetch('{{ url }}').then(r=>r.json()).then(rows=>{
+    rows.forEach(c=>L.circleMarker([c.lat,c.lng],{radius:8,color:col[c.priority],fillOpacity:.75})
+      .bindPopup('<b>'+c.title.replace(/</g,'&lt;')+'</b><br>'+c.category+' &middot; '+c.priority+'<br>'+c.status).addTo(m));
+    if(rows.length) m.fitBounds(rows.map(c=>[c.lat,c.lng]),{padding:[30,30],maxZoom:15});
+  });
+})();
+</script>
+{% endmacro %}

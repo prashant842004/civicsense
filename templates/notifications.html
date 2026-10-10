@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block content %}
+<h3 class="mb-3">Notifications</h3>
+{% for n in items %}<div class="card-soft p-3 mb-2 d-flex justify-content-between">
+  <span>{% if n.link %}<a href="{{ n.link }}">{{ n.message }}</a>{% else %}{{ n.message }}{% endif %}</span>
+  <small class="text-muted">{{ n.created_at.strftime('%d %b, %H:%M') }}</small></div>
+{% else %}<p class="text-muted">Nothing yet.</p>{% endfor %}{% endblock %}

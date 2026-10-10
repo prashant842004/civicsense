@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% from "_macros.html" import prio, status, route %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">My complaints</h3>
+<a class="btn btn-green" href="{{ url_for('citizen.report') }}">Report new issue</a></div>
+<div class="row g-3 mb-4">
+  {% for n,l in [(counts.total,'Total'),(counts.open,'In progress'),(counts.done,'Resolved')] %}
+  <div class="col-4"><div class="card-soft p-3 text-center"><div class="stat">{{ n }}</div><div class="text-muted">{{ l }}</div></div></div>{% endfor %}
+</div>
+<div class="card-soft p-3 mb-4">Your points: <b>{{ current_user.points }}</b>
+{% if current_user.top_badge %} &middot; Badge: <b class="text-green">{{ current_user.top_badge }}</b>{% endif %}</div>
+<div class="table-responsive"><table class="table align-middle">
+<thead><tr><th>#</th><th>Issue</th><th>Category</th><th>Priority</th><th>Handled by</th><th>Status</th></tr></thead><tbody>
+{% for c in items %}<tr><td>{{ c.id }}</td><td><a href="{{ url_for('citizen.detail', cid=c.id) }}">{{ c.title }}</a></td>
+<td>{{ label(c.category) }}</td><td>{{ prio(c.priority) }}</td><td>{{ route(c.route) }}</td><td>{{ status(c.status) }}</td></tr>
+{% else %}<tr><td colspan="6" class="text-muted">No complaints yet.</td></tr>{% endfor %}
+</tbody></table></div>{% endblock %}

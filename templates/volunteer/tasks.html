@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% from "_macros.html" import prio, status, media %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Volunteer tasks</h3>
+<div><button id="near" class="btn btn-outline-secondary btn-sm">Sort by nearest</button>
+<a class="btn btn-navy btn-sm" href="{{ url_for('volunteer.certificate') }}">Certificate</a></div></div>
+<div class="card-soft p-3 mb-4">Points: <b>{{ current_user.points }}</b>
+{% if current_user.badges %} &middot; Badges: {% for b in current_user.badges %}<span class="pill s-Verified me-1">{{ b }}</span>{% endfor %}{% endif %}</div>
+<h5>My tasks</h5>
+{% for c in mine %}<div class="card-soft p-3 mb-2"><div class="row align-items-center g-2">
+  <div class="col-md-5"><a href="{{ url_for('citizen.detail', cid=c.id) }}"><b>{{ c.title }}</b></a><br>{{ prio(c.priority) }} {{ status(c.status) }}</div>
+  <div class="col-md-7">{% if c.status=='In Progress' %}
+    <form method="post" action="{{ url_for('volunteer.complete', cid=c.id) }}" enctype="multipart/form-data" class="d-flex gap-2">
+      <input class="form-control form-control-sm" type="file" name="proof" accept="image/*" required><button class="btn btn-green btn-sm text-nowrap">Upload proof</button></form>
+    {% elif c.status=='Resolved' %}<span class="text-muted">Waiting for admin verification</span>
+    {% elif c.status=='Verified' %}<span class="text-green fw-bold">+{{ {'High':30,'Medium':20,'Low':10}[c.priority] }} points earned</span>{% endif %}</div>
+</div></div>{% else %}<p class="text-muted">You haven't accepted any tasks yet.</p>{% endfor %}
+<h5 class="mt-4">Open community tasks {% if located %}<small class="text-muted">(nearest first)</small>{% endif %}</h5>
+<div class="row g-3">{% for c,d in rows %}<div class="col-md-6"><div class="card-soft p-3 h-100">
+  {{ media(c) }}<h6 class="mt-2">{{ c.title }}</h6>
+  <p class="mb-1">{{ label(c.category) }} {{ prio(c.priority) }}{% if d is not none %} &middot; {{ '%.1f'|format(d) }} km away{% endif %}</p>
+  <p class="small text-muted">{{ c.address or c.description[:80] }}</p>
+  <form method="post" action="{{ url_for('volunteer.accept', cid=c.id) }}"><button class="btn btn-navy btn-sm">Accept task</button></form>
+</div></div>{% else %}<p class="text-muted">No open tasks right now.</p>{% endfor %}</div>{% endblock %}
+{% block scripts %}<script>
+document.getElementById('near').onclick=()=>navigator.geolocation.getCurrentPosition(
+ p=>location.search='?lat='+p.coords.latitude+'&lng='+p.coords.longitude,()=>alert('Could not get your location'));
+</script>{% endblock %}

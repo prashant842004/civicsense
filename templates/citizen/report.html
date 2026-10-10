@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-3">Report a civic issue</h3>
+<form method="post" enctype="multipart/form-data" class="row g-4">
+  <div class="col-lg-6">
+    <label class="form-label">Title</label>
+    <input class="form-control mb-3" name="title" value="{{ form.get('title','') }}" maxlength="150" required placeholder="e.g. Large pothole near Sitabuldi market">
+    <label class="form-label">Description</label>
+    <textarea class="form-control mb-3" name="description" rows="3" placeholder="Anything that helps (danger, size, since when)">{{ form.get('description','') }}</textarea>
+    <label class="form-label">Issue type</label>
+    <select class="form-select mb-1" name="category">
+      <option value="auto">Let AI decide</option>
+      {% for k,l in category_choices %}<option value="{{ k }}" {{ 'selected' if form.get('category')==k }}>{{ l }}</option>{% endfor %}
+    </select>
+    <div class="form-text mb-3">If a trained model is installed, AI detection overrides this.</div>
+    <label class="form-label">Photo or video</label>
+    <input class="form-control mb-3" type="file" name="media" accept="image/*,video/*" required>
+    <label class="form-label">Address / landmark (optional)</label>
+    <input class="form-control mb-3" name="address" value="{{ form.get('address','') }}" maxlength="255">
+    <button class="btn btn-green btn-lg">Submit complaint</button>
+  </div>
+  <div class="col-lg-6">
+    <label class="form-label">Location - click the map to drop a pin</label>
+    <div id="pick" class="map map-lg"></div>
+    <button type="button" id="loc" class="btn btn-sm btn-outline-secondary mt-2">Use my current location</button>
+    <input type="hidden" name="lat" id="lat" value="{{ form.get('lat','') }}">
+    <input type="hidden" name="lng" id="lng" value="{{ form.get('lng','') }}">
+  </div>
+</form>{% endblock %}
+{% block scripts %}<script>
+const start=[parseFloat(document.getElementById('lat').value)||21.1458, parseFloat(document.getElementById('lng').value)||79.0882];
+const m=L.map('pick').setView(start,13);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+let pin=null;
+function setPin(lat,lng){document.getElementById('lat').value=lat.toFixed(6);document.getElementById('lng').value=lng.toFixed(6);
+  if(pin)pin.setLatLng([lat,lng]);else pin=L.marker([lat,lng]).addTo(m);}
+if(document.getElementById('lat').value)setPin(start[0],start[1]);
+m.on('click',e=>setPin(e.latlng.lat,e.latlng.lng));
+document.getElementById('loc').onclick=()=>navigator.geolocation&&navigator.geolocation.getCurrentPosition(p=>{setPin(p.coords.latitude,p.coords.longitude);m.setView([p.coords.latitude,p.coords.longitude],16);},()=>alert('Could not get your location'));
+</script>{% endblock %}

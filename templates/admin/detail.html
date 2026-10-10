@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% from "_macros.html" import prio, status, route, media %}
+{% block content %}
+<a href="{{ url_for('admin.complaints') }}" class="small">&larr; All complaints</a>
+<div class="row g-4 mt-1"><div class="col-lg-7">
+  <h3>#{{ c.id }} {{ c.title }}</h3>
+  <p>{{ status(c.status) }} {{ prio(c.priority) }} {{ route(c.route) }} <span class="text-muted ms-2">{{ label(c.category) }} &middot; by {{ c.reporter.name }}</span></p>
+  <div class="row g-3"><div class="col-md-6"><h6>Before</h6>{{ media(c) }}</div>
+  <div class="col-md-6"><h6>After</h6>{% if c.proof_path %}<img class="thumb" alt="Proof" src="{{ url_for('static', filename='uploads/'+c.proof_path) }}">{% else %}<p class="text-muted">No proof yet.</p>{% endif %}</div></div>
+  <p class="mt-3">{{ c.description }}</p>
+  <div class="card-soft p-3 mb-3"><b>AI analysis:</b> {{ c.ai_note }}{% if c.ai_confidence %} ({{ (c.ai_confidence*100)|round|int }}%){% endif %}
+  {% if c.verify_score is not none %}<br><b>Before/after check:</b> change score {{ c.verify_score }} - {{ c.verify_note }}{% endif %}
+  {% if c.rating %}<br><b>Citizen rating:</b> {{ c.rating }}/5 {{ c.feedback }}{% endif %}</div>
+  <div id="m" class="map"></div>
+</div><div class="col-lg-5">
+  <form method="post" class="card-soft p-3 mb-3"><input type="hidden" name="action" value="update">
+    <h5>Manage</h5>
+    <label class="form-label">Status</label>
+    <select class="form-select mb-2" name="status">{% for s in STATUSES if s!='Verified' %}<option {{ 'selected' if c.status==s }}>{{ s }}</option>{% endfor %}</select>
+    <label class="form-label">Handled by</label>
+    <select class="form-select mb-2" name="route"><option value="municipal" {{ 'selected' if c.route=='municipal' }}>Municipal Corporation</option><option value="volunteer" {{ 'selected' if c.route=='volunteer' }}>Community volunteers</option></select>
+    <label class="form-label">Department</label>
+    <select class="form-select mb-2" name="department">{% for d in DEPARTMENTS %}<option {{ 'selected' if c.department==d }}>{{ d }}</option>{% endfor %}<option {{ 'selected' if c.department=='Community Volunteers' }}>Community Volunteers</option></select>
+    <label class="form-label">Note to citizen (optional)</label>
+    <input class="form-control mb-3" name="note" maxlength="200">
+    <button class="btn btn-navy w-100">Save changes</button></form>
+  {% if c.route=='municipal' and c.status!='Verified' %}
+  <form method="post" enctype="multipart/form-data" class="card-soft p-3 mb-3"><input type="hidden" name="action" value="proof">
+    <h5>Upload completion proof</h5><input class="form-control mb-2" type="file" name="proof" accept="image/*" required>
+    <button class="btn btn-green w-100">Mark resolved</button></form>{% endif %}
+  {% if c.status=='Resolved' and c.proof_path %}
+  <form method="post" class="card-soft p-3 mb-3"><input type="hidden" name="action" value="verify">
+    <h5>Verify resolution</h5><p class="small mb-2">Awards points{% if c.volunteer %} to {{ c.volunteer.name }}{% endif %} and the reporter.</p>
+    <button class="btn btn-green w-100">Verify &amp; close</button></form>{% endif %}
+  <h5>Timeline</h5><ul class="timeline">{% for e in c.events %}<li>{{ e.text }}<br><small class="text-muted">{{ e.created_at.strftime('%d %b, %H:%M') }}</small></li>{% endfor %}</ul>
+</div></div>{% endblock %}
+{% block scripts %}<script>
+const m=L.map('m').setView([{{ c.lat }},{{ c.lng }}],16);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+L.marker([{{ c.lat }},{{ c.lng }}]).addTo(m);</script>{% endblock %}

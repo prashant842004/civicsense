@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% from "_macros.html" import prio, status, route, map_script %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3"><h3 class="mb-0">Municipal dashboard</h3>
+<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.export') }}">Export CSV</a></div>
+<div class="row g-3 mb-4">
+  {% for n,l in [(stats.total,'Total'),(stats.pending,'New / unassigned'),(stats.progress,'In progress'),(stats.awaiting,'Awaiting verification'),(stats.verified,'Verified'),(stats.high,'High priority open')] %}
+  <div class="col-6 col-md-2"><div class="card-soft p-3 text-center h-100"><div class="stat">{{ n }}</div><div class="text-muted small">{{ l }}</div></div></div>{% endfor %}
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-lg-7"><div class="card-soft p-3"><h5>Complaints by category</h5><canvas id="cat" height="140"></canvas></div></div>
+  <div class="col-lg-5"><div class="card-soft p-3"><h5>Status</h5><canvas id="st" height="200"></canvas></div></div>
+</div>
+<div class="row g-4"><div class="col-lg-7"><h5>Heat map of issues</h5><div id="map" class="map map-lg"></div></div>
+<div class="col-lg-5"><h5>Latest complaints</h5>
+{% for c in recent %}<a class="d-block card-soft p-2 mb-2 text-decoration-none text-reset" href="{{ url_for('admin.detail', cid=c.id) }}">
+  <b>{{ c.title }}</b><br>{{ prio(c.priority) }} {{ status(c.status) }} {{ route(c.route) }}</a>
+{% else %}<p class="text-muted">No complaints yet.</p>{% endfor %}
+<a href="{{ url_for('admin.complaints') }}">View all</a></div></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+fetch('{{ url_for("admin.api_stats") }}').then(r=>r.json()).then(d=>{
+  new Chart(document.getElementById('cat'),{type:'bar',data:{labels:Object.keys(d.category),datasets:[{data:Object.values(d.category),backgroundColor:'#0B4A7D'}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  new Chart(document.getElementById('st'),{type:'doughnut',data:{labels:Object.keys(d.status),datasets:[{data:Object.values(d.status),backgroundColor:['#6B7C8F','#2F7DB8','#0B4A7D','#F2A93B','#148A47']}]}});
+});
+</script>
+{{ map_script('map', url_for('api_complaints')) }}
+{% endblock %}

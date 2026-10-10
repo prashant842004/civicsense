@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% from "_macros.html" import prio, status, route %}
+{% block content %}
+<h3 class="mb-3">All complaints</h3>
+<form class="row g-2 mb-3">
+  <div class="col-md-3"><select class="form-select" name="status"><option value="">Any status</option>{% for s in STATUSES %}<option {{ 'selected' if f.status==s }}>{{ s }}</option>{% endfor %}</select></div>
+  <div class="col-md-3"><select class="form-select" name="category"><option value="">Any category</option>{% for k,l in category_choices %}<option value="{{ k }}" {{ 'selected' if f.category==k }}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><select class="form-select" name="priority"><option value="">Any priority</option>{% for p in ['High','Medium','Low'] %}<option {{ 'selected' if f.priority==p }}>{{ p }}</option>{% endfor %}</select></div>
+  <div class="col-md-2"><select class="form-select" name="route"><option value="">Any route</option><option value="municipal" {{ 'selected' if f.route=='municipal' }}>Municipal</option><option value="volunteer" {{ 'selected' if f.route=='volunteer' }}>Volunteers</option></select></div>
+  <div class="col-md-2"><button class="btn btn-navy w-100">Filter</button></div>
+</form>
+<div class="table-responsive"><table class="table align-middle">
+<thead><tr><th>#</th><th>Title</th><th>Category</th><th>Priority</th><th>Route</th><th>Department</th><th>Status</th><th>Reported</th></tr></thead><tbody>
+{% for c in items %}<tr><td>{{ c.id }}</td><td><a href="{{ url_for('admin.detail', cid=c.id) }}">{{ c.title }}</a></td><td>{{ label(c.category) }}</td>
+<td>{{ prio(c.priority) }}</td><td>{{ route(c.route) }}</td><td>{{ c.department }}</td><td>{{ status(c.status) }}</td><td>{{ c.created_at.strftime('%d %b') }}</td></tr>
+{% else %}<tr><td colspan="8" class="text-muted">No complaints match.</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
